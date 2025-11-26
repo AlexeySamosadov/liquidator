@@ -9,11 +9,23 @@ const FRACTION_SCALE = 1_000_000_000n; // 1e9 for fractional precision without f
 
 type CachedPrice = { priceUsd: number; timestamp: number };
 type CachedDecimals = { decimals: number; timestamp: number };
+type CachedVToken = { vToken: Address; timestamp: number };
 
 class PriceService {
   private readonly priceCache = new Map<string, CachedPrice>();
 
   private readonly decimalsCache = new Map<string, CachedDecimals>();
+
+  private readonly vTokenCache = new Map<string, CachedVToken>();
+
+  // Telemetry counters
+  private priceCacheHits = 0;
+  private priceCacheMisses = 0;
+  private decimalsCacheHits = 0;
+  private decimalsCacheMisses = 0;
+  private vTokenCacheHits = 0;
+  private vTokenCacheMisses = 0;
+  private oracleCalls = 0;
 
   constructor(
     private readonly venusContracts: VenusContracts,
@@ -62,13 +74,17 @@ class PriceService {
     return priceUsd;
   }
 
-  async getUnderlyingDecimals(underlying: Address): Promise<number> {
+    async getUnderlyingDecimals(underlying: Address): Promise<number> {
     const key = underlying.toLowerCase();
     const cached = this.decimalsCache.get(key);
     const now = Date.now();
     if (cached && now - cached.timestamp < this.cacheTtlMs) {
+      this.decimalsCacheHits++;
+      logger.debug('PriceService: decimals cache hit', { key });
       return cached.decimals;
     }
+    this.decimalsCacheMisses++;
+    logger.debug('PriceService: decimals cache miss', { key });
 
     try {
       const comptrollerProvider = this.venusContracts.getComptroller().runner?.provider;
@@ -88,8 +104,12 @@ class PriceService {
     const cached = this.priceCache.get(key);
     const now = Date.now();
     if (cached && now - cached.timestamp < this.cacheTtlMs) {
+      this.priceCacheHits++;
+      logger.debug('PriceService: price cache hit', { key });
       return cached.priceUsd;
     }
+    this.priceCacheMisses++;
+    logger.debug('PriceService: price cache miss', { key });
     return undefined;
   }
 
@@ -99,6 +119,8 @@ class PriceService {
 
   private async fetchPriceUsd(vToken: Address, underlyingDecimals: number): Promise<number> {
     try {
+      this.oracleCalls++;
+      logger.debug('PriceService: fetching price from oracle', { vToken });
       const priceMantissa = await this.venusContracts.getOracle().getUnderlyingPrice(vToken);
       return this.mantissaToNumber(priceMantissa, underlyingDecimals);
     } catch (error) {
@@ -131,9 +153,35 @@ class PriceService {
   }
 
   private async resolveVTokenForUnderlying(underlying: Address, fallbackVToken?: Address): Promise<Address | null> {
+    const key = underlying.toLowerCase();
+    const now = Date.now();
+
+    // Check cache first
+    const cached = this.vTokenCache.get(key);
+    if (cached && now - cached.timestamp < this.cacheTtlMs) {
+      this.vTokenCacheHits++;
+      logger.debug('PriceService: vToken cache hit', { key });
+      return cached.vToken;
+    }
+
+    this.vTokenCacheMisses++;
+    logger.debug('PriceService: vToken cache miss', { key });
+
+    // Check configured mapping
     const configured = this.venusContracts.getVTokenForUnderlying(underlying);
-    if (configured) return configured;
-    if (fallbackVToken) return fallbackVToken;
+    if (configured) {
+      this.vTokenCache.set(key, { vToken: configured, timestamp: now });
+      return configured;
+    }
+
+    // Use fallback if provided
+    if (fallbackVToken) {
+      this.vTokenCache.set(key, { vToken: fallbackVToken, timestamp: now });
+      return fallbackVToken;
+    }
+
+    // Only use getAllMarkets if not found in mapping
+    logger.debug('PriceService: vToken not found in config mapping, scanning markets (this consumes RPC)', { underlying });
 
     try {
       const markets = await this.venusContracts.getComptroller().getAllMarkets();
@@ -147,6 +195,8 @@ class PriceService {
             continue;
           }
           if (marketUnderlying.toLowerCase() === underlying.toLowerCase()) {
+            // Cache for future use
+            this.vTokenCache.set(key, { vToken: market, timestamp: now });
             return market;
           }
         } catch (innerError) {
@@ -171,6 +221,30 @@ class PriceService {
       });
       return 18;
     }
+  }
+
+  getTelemetry(): {
+    priceCache: { hits: number; misses: number };
+    decimalsCache: { hits: number; misses: number };
+    vTokenCache: { hits: number; misses: number };
+    oracleCalls: number;
+    priceCacheHitRate: number;
+    decimalsCacheHitRate: number;
+    vTokenCacheHitRate: number;
+  } {
+    const totalPriceRequests = this.priceCacheHits + this.priceCacheMisses;
+    const totalDecimalsRequests = this.decimalsCacheHits + this.decimalsCacheMisses;
+    const totalVTokenRequests = this.vTokenCacheHits + this.vTokenCacheMisses;
+
+    return {
+      priceCache: { hits: this.priceCacheHits, misses: this.priceCacheMisses },
+      decimalsCache: { hits: this.decimalsCacheHits, misses: this.decimalsCacheMisses },
+      vTokenCache: { hits: this.vTokenCacheHits, misses: this.vTokenCacheMisses },
+      oracleCalls: this.oracleCalls,
+      priceCacheHitRate: totalPriceRequests > 0 ? this.priceCacheHits / totalPriceRequests : 0,
+      decimalsCacheHitRate: totalDecimalsRequests > 0 ? this.decimalsCacheHits / totalDecimalsRequests : 0,
+      vTokenCacheHitRate: totalVTokenRequests > 0 ? this.vTokenCacheHits / totalVTokenRequests : 0,
+    };
   }
 }
 

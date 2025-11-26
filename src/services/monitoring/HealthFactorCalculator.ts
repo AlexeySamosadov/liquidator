@@ -1,6 +1,7 @@
 import { Address, TokenPositionDetail, VenusPosition } from '../../types';
 import VenusContracts from '../../contracts';
 import { logger } from '../../utils/logger';
+import { getLiquidationIncentiveDecimal } from '../liquidation/LiquidationIncentiveHelper';
 
 const USD_SCALE = 10n ** 36n;
 const EXCHANGE_RATE_SCALE = 10n ** 18n;
@@ -34,6 +35,85 @@ class HealthFactorCalculator {
       return 1.0;
     } catch (error) {
       logger.warn('Failed to calculate health factor', { account, error });
+      return Number.NaN;
+    }
+  }
+
+  /**
+   * Calculates PRECISE Health Factor for healthy positions
+   * HF = (Σ collateral × price × liquidationThreshold) / (Σ debt × price)
+   *
+   * This gives exact HF values even for healthy positions (instead of Infinity)
+   */
+  async calculatePreciseHealthFactor(account: Address): Promise<number> {
+    try {
+      const comptroller = this.venusContracts.getComptroller();
+      const oracle = this.venusContracts.getOracle();
+
+      let weightedCollateralUsd = 0;
+      let totalDebtUsd = 0;
+
+      const assetsIn = await comptroller.getAssetsIn(account);
+
+      for (const vTokenAddress of assetsIn) {
+        try {
+          const vToken = this.venusContracts.getVToken(vTokenAddress);
+          const snapshot = await vToken.getAccountSnapshot(account);
+
+          if (snapshot.error !== 0n) {
+            continue;
+          }
+
+          const price = await oracle.getUnderlyingPrice(vTokenAddress);
+
+          // Get market parameters
+          const market = await comptroller.markets(vTokenAddress);
+
+          // Venus Diamond sets liquidationThreshold = 1 (not 0) for Core Pool markets
+          // Core Pool: LT ≈ 0, CF = 80% → use CF
+          // Isolated Pools: LT = 85%, CF = 80% → use LT (higher)
+          // Use max(LT, CF) to handle both cases correctly
+          const liquidationThreshold = Number(market.liquidationThresholdMantissa) / 1e18;
+          const collateralFactor = Number(market.collateralFactorMantissa) / 1e18;
+          const effectiveThreshold = Math.max(liquidationThreshold, collateralFactor);
+
+          // Calculate collateral value with effective threshold
+          if (snapshot.vTokenBalance > 0n) {
+            const collateralUnderlying = (snapshot.vTokenBalance * snapshot.exchangeRate) / EXCHANGE_RATE_SCALE;
+            const collateralUsdScaled = (collateralUnderlying * price * USD_RESULT_SCALE) / USD_SCALE;
+            const collateralUsd = this.toNumberWithScale(collateralUsdScaled, USD_RESULT_SCALE, 'collateralUsd');
+
+            if (Number.isFinite(collateralUsd)) {
+              weightedCollateralUsd += collateralUsd * effectiveThreshold;
+            }
+          }
+
+          // Calculate debt value
+          if (snapshot.borrowBalance > 0n) {
+            const debtUsdScaled = (snapshot.borrowBalance * price * USD_RESULT_SCALE) / USD_SCALE;
+            const debtUsd = this.toNumberWithScale(debtUsdScaled, USD_RESULT_SCALE, 'debtUsd');
+
+            if (Number.isFinite(debtUsd)) {
+              totalDebtUsd += debtUsd;
+            }
+          }
+        } catch (error) {
+          logger.warn('Failed to process market in precise HF calculation', { account, vToken: vTokenAddress, error });
+          continue;
+        }
+      }
+
+      // No debt = infinite HF
+      if (totalDebtUsd === 0) {
+        return Number.POSITIVE_INFINITY;
+      }
+
+      // HF = weighted_collateral / debt
+      const healthFactor = weightedCollateralUsd / totalDebtUsd;
+
+      return Number.isFinite(healthFactor) ? healthFactor : Number.POSITIVE_INFINITY;
+    } catch (error) {
+      logger.warn('Failed to calculate precise health factor', { account, error });
       return Number.NaN;
     }
   }
@@ -135,8 +215,7 @@ class HealthFactorCalculator {
   }
 
   async getLiquidationIncentive(): Promise<number> {
-    const mantissa = await this.venusContracts.getComptroller().liquidationIncentiveMantissa();
-    return Number(mantissa) / 1e18;
+    return getLiquidationIncentiveDecimal(this.venusContracts);
   }
 
   private toNumberWithScale(value: bigint, scale: bigint, label: string): number {

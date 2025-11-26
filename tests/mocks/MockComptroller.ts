@@ -2,7 +2,7 @@ import { Address, AccountLiquidity } from '../../src/types';
 
 // Lightweight mock; cast to `any` when passing where a real IComptroller is expected.
 export class MockComptroller {
-  private markets: Address[] = [];
+  private marketsList: Address[] = [];
 
   private liquidityByAccount = new Map<string, AccountLiquidity>();
 
@@ -14,8 +14,10 @@ export class MockComptroller {
 
   private liquidationIncentive: bigint = 1_080_000_000_000_000_000n; // 1.08e18
 
+  private marketsData = new Map<string, { liquidationIncentiveMantissa: bigint }>();
+
   setMarkets(markets: Address[]): void {
-    this.markets = markets;
+    this.marketsList = markets;
   }
 
   setAccountLiquidity(account: Address, liquidity: AccountLiquidity): void {
@@ -38,8 +40,12 @@ export class MockComptroller {
     this.liquidationIncentive = incentive;
   }
 
+  setMarketsWithLiquidationIncentive(incentive: bigint, vToken: Address): void {
+    this.marketsData.set(vToken.toLowerCase(), { liquidationIncentiveMantissa: incentive });
+  }
+
   async getAllMarkets(): Promise<Address[]> {
-    return this.markets;
+    return this.marketsList;
   }
 
   async getAccountLiquidity(account: Address): Promise<AccountLiquidity> {
@@ -63,5 +69,23 @@ export class MockComptroller {
 
   async liquidationIncentiveMantissa(): Promise<bigint> {
     return this.liquidationIncentive;
+  }
+
+  async getLiquidationIncentive(vToken: Address): Promise<bigint> {
+    const marketData = this.marketsData.get(vToken.toLowerCase());
+    if (marketData) {
+      return marketData.liquidationIncentiveMantissa;
+    }
+    // Return global liquidation incentive if no market-specific data
+    return this.liquidationIncentive;
+  }
+
+  async markets(vToken: Address): Promise<{ liquidationIncentiveMantissa: bigint }> {
+    const marketData = this.marketsData.get(vToken.toLowerCase());
+    if (marketData) {
+      return marketData;
+    }
+    // Return global liquidation incentive if no market-specific data
+    return { liquidationIncentiveMantissa: this.liquidationIncentive };
   }
 }

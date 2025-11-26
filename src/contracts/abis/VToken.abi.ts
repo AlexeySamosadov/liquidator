@@ -140,7 +140,7 @@ export const VTOKEN_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'borrower',
         type: 'address',
@@ -171,13 +171,13 @@ export const VTOKEN_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'payer',
         type: 'address',
       },
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'borrower',
         type: 'address',
@@ -208,7 +208,7 @@ export const VTOKEN_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'minter',
         type: 'address',
@@ -233,7 +233,7 @@ export const VTOKEN_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'redeemer',
         type: 'address',
@@ -258,13 +258,13 @@ export const VTOKEN_ABI = [
     anonymous: false,
     inputs: [
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'liquidator',
         type: 'address',
       },
       {
-        indexed: true,
+        indexed: false,
         internalType: 'address',
         name: 'borrower',
         type: 'address',

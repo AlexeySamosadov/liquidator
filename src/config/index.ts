@@ -1,10 +1,12 @@
 import dotenv from 'dotenv';
+import { JsonRpcProvider, WebSocketProvider } from 'ethers';
 import {
   BotConfig,
   CollateralStrategy,
   DexAddresses,
   ExecutionConfig,
   LogLevel,
+  MonitoringMode,
   VenusAddresses,
 } from '../types';
 import { COMMON_TOKENS } from './tokens';
@@ -86,6 +88,16 @@ export const loadConfig = (): BotConfig => {
     throw new Error('MIN_POSITION_SIZE_USD must be greater than 0');
   }
 
+  const historicalScanBlocks = parseNumber('HISTORICAL_SCAN_BLOCKS', process.env.HISTORICAL_SCAN_BLOCKS, 1000);
+  if (historicalScanBlocks <= 0) {
+    throw new Error('HISTORICAL_SCAN_BLOCKS must be greater than 0');
+  }
+
+  const historicalScanWindowBlocks = parseNumber('HISTORICAL_SCAN_WINDOW_BLOCKS', process.env.HISTORICAL_SCAN_WINDOW_BLOCKS, 200);
+  if (historicalScanWindowBlocks <= 0) {
+    throw new Error('HISTORICAL_SCAN_WINDOW_BLOCKS must be greater than 0');
+  }
+
   const maxPositionSizeUsd = parseNumber('MAX_POSITION_SIZE_USD', process.env.MAX_POSITION_SIZE_USD, 1000);
   const gasPriceMultiplier = validateGasMultiplier(
     parseNumber('GAS_PRICE_MULTIPLIER', process.env.GAS_PRICE_MULTIPLIER, 1.0),
@@ -108,7 +120,11 @@ export const loadConfig = (): BotConfig => {
   );
   const preferredStablecoin = process.env.PREFERRED_STABLECOIN || COMMON_TOKENS.USDT;
 
-  const pollingIntervalMs = parseNumber('POLLING_INTERVAL_MS', process.env.POLLING_INTERVAL_MS, 10000);
+  const pollingIntervalMs = parseNumber('POLLING_INTERVAL_MS', process.env.POLLING_INTERVAL_MS, 120000);
+  const pollingBatchSize = parseNumber('POLLING_BATCH_SIZE', process.env.POLLING_BATCH_SIZE, 5);
+  if (pollingBatchSize < 0) {
+    throw new Error('POLLING_BATCH_SIZE must be >= 0');
+  }
   const minHealthFactor = parseNumber('MIN_HEALTH_FACTOR', process.env.MIN_HEALTH_FACTOR, 1.0);
 
   const executionIntervalMs = parseNumber('EXECUTION_INTERVAL_MS', process.env.EXECUTION_INTERVAL_MS, 30000);
@@ -157,6 +173,16 @@ export const loadConfig = (): BotConfig => {
   const logLevel = ((process.env.LOG_LEVEL || 'info').toLowerCase() as LogLevel) || LogLevel.INFO;
   const logToFile = parseBoolean(process.env.LOG_TO_FILE, true);
   const flashLiquidatorContract = process.env.FLASH_LIQUIDATOR_CONTRACT;
+  const enableHistoricalScan = parseBoolean(process.env.ENABLE_HISTORICAL_SCAN, true);
+
+  const monitoringMode = (process.env.MONITORING_MODE as MonitoringMode) || MonitoringMode.ENABLED;
+
+  // Scan configuration parameters
+  const scanIntervalMs = parseNumber('SCAN_INTERVAL_MS', process.env.SCAN_INTERVAL_MS, 120000);
+  const scanBatchSize = parseNumber('SCAN_BATCH_SIZE', process.env.SCAN_BATCH_SIZE, 20);
+  const scanWindowBlocks = parseNumber('SCAN_WINDOW_BLOCKS', process.env.SCAN_WINDOW_BLOCKS, 1000);
+  const rpcDelayMs = parseNumber('RPC_DELAY_MS', process.env.RPC_DELAY_MS, 50);
+  const maxNodeRealBlocks = parseNumber('MAX_NODE_REAL_BLOCKS', process.env.MAX_NODE_REAL_BLOCKS, 45000);
 
   const executionConfig: ExecutionConfig = {
     intervalMs: executionIntervalMs,
@@ -183,21 +209,49 @@ export const loadConfig = (): BotConfig => {
     maxPriceImpact,
     preferredStablecoin,
     pollingIntervalMs,
+    pollingBatchSize,
     minHealthFactor,
     logLevel,
     logToFile,
     venus: venusAddresses,
     dex: dexAddresses,
     flashLiquidatorContract,
+    enableHistoricalScan,
+    monitoringMode,
     tokenBlacklist,
     tokenWhitelist,
     maxDailyLossUsd,
     emergencyStopFile,
     dryRun,
     statsLoggingIntervalMs,
+    historicalScanBlocks,
+    historicalScanWindowBlocks,
+    scanIntervalMs,
+    scanBatchSize,
+    scanWindowBlocks,
+    rpcDelayMs,
+    maxNodeRealBlocks,
     execution: executionConfig,
   };
 };
 
 export const VENUS_ADDRESSES = venusAddresses;
 export const DEX_ADDRESSES = dexAddresses;
+
+/**
+ * Create provider from RPC URL
+ * Automatically detects and uses WebSocket for wss:// URLs
+ * Falls back to JSON-RPC for http(s):// URLs
+ */
+export const createProvider = async (rpcUrl: string): Promise<JsonRpcProvider | WebSocketProvider> => {
+  const { JsonRpcProvider: JRP, WebSocketProvider: WSP } = await import('ethers');
+
+  if (rpcUrl.startsWith('wss://') || rpcUrl.startsWith('ws://')) {
+    const wsProvider = new WSP(rpcUrl);
+    // Test connection
+    await wsProvider.getNetwork();
+    return wsProvider;
+  }
+
+  return new JRP(rpcUrl);
+};

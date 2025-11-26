@@ -12,6 +12,14 @@ class PollingService {
   private isRunning = false;
 
   private lastPollTimestamp = 0;
+  private pollCursor = 0;
+
+  // Telemetry counters
+  private pollCount = 0;
+  private totalAccountsPolled = 0;
+  private failedPolls = 0;
+  private successfulPositionUpdates = 0;
+  private lastPollStartTime = 0;
 
   constructor(
     private readonly healthFactorCalculator: HealthFactorCalculator,
@@ -19,6 +27,7 @@ class PollingService {
     private readonly minHealthFactor: number,
     private readonly onPositionUpdate: (position: VenusPosition) => Promise<void>,
     private readonly healthyPollsBeforeDrop = 3,
+    private readonly maxAccountsPerPoll = 0,
   ) {}
 
   addAccount(account: Address): void {
@@ -38,6 +47,9 @@ class PollingService {
     const key = account.toLowerCase();
     const removed = this.accounts.delete(key);
     this.accountMetadata.delete(key);
+    if (this.pollCursor >= this.accounts.size) {
+      this.pollCursor = 0;
+    }
     if (removed) {
       logger.info('Account removed from polling set', { account });
     }
@@ -82,9 +94,19 @@ class PollingService {
       return;
     }
 
-    logger.debug('Polling accounts for health factor', { count: this.accounts.size });
+    const startTime = Date.now();
+    this.lastPollStartTime = startTime;
 
-    const accounts = Array.from(this.accounts.values());
+    const accounts = this.getAccountsBatch();
+    if (accounts.length === 0) return;
+
+    logger.debug('Polling accounts for health factor', {
+      total: this.accounts.size,
+      batchSize: accounts.length,
+      totalPolled: this.totalAccountsPolled,
+      pollCount: this.pollCount,
+    });
+
     const results = await Promise.allSettled(
       accounts.map(async (account) => {
         const position = await this.healthFactorCalculator.getPositionDetails(account);
@@ -93,19 +115,58 @@ class PollingService {
       }),
     );
 
+    let successfulUpdates = 0;
     results.forEach((res, idx) => {
       if (res.status === 'rejected') {
         logger.warn('Polling failed for account', { account: accounts[idx], error: res.reason });
+        this.failedPolls++;
+      } else {
+        successfulUpdates++;
       }
+    });
+
+    this.successfulPositionUpdates += successfulUpdates;
+    this.totalAccountsPolled += accounts.length;
+    this.pollCount++;
+
+    const pollDuration = Date.now() - startTime;
+    logger.info('Polling completed', {
+      batchSize: accounts.length,
+      totalAccounts: this.accounts.size,
+      successfulUpdates,
+      failedUpdates: accounts.length - successfulUpdates,
+      pollDurationMs: pollDuration,
+      avgSuccessRate: successfulUpdates / Math.max(accounts.length, 1),
+      totalSuccessfulUpdates: this.successfulPositionUpdates,
     });
 
     this.lastPollTimestamp = Date.now();
   }
 
-  getStats(): { accountsTracked: number; lastPoll: number } {
+  getStats(): {
+    accountsTracked: number;
+    lastPoll: number;
+    totalPolled: number;
+    pollCount: number;
+    failedPolls: number;
+    successfulUpdates: number;
+    avgPollDurationMs: number;
+    avgSuccessRate: number;
+  } {
+    const successRate = this.pollCount > 0 ? this.successfulPositionUpdates / this.totalAccountsPolled : 0;
+    const avgPollDuration = this.pollCount > 0 && this.lastPollStartTime > 0
+      ? (this.lastPollTimestamp - this.lastPollStartTime) / this.pollCount
+      : 0;
+
     return {
       accountsTracked: this.accounts.size,
       lastPoll: this.lastPollTimestamp,
+      totalPolled: this.totalAccountsPolled,
+      pollCount: this.pollCount,
+      failedPolls: this.failedPolls,
+      successfulUpdates: this.successfulPositionUpdates,
+      avgPollDurationMs: avgPollDuration,
+      avgSuccessRate: successRate,
     };
   }
 
@@ -126,6 +187,25 @@ class PollingService {
     }
 
     this.accountMetadata.set(key, meta);
+  }
+
+  private getAccountsBatch(): string[] {
+    const accounts = Array.from(this.accounts.values());
+    if (accounts.length === 0) return [];
+
+    if (this.maxAccountsPerPoll <= 0 || accounts.length <= this.maxAccountsPerPoll) {
+      this.pollCursor = 0;
+      return accounts;
+    }
+
+    if (this.pollCursor >= accounts.length) {
+      this.pollCursor = 0;
+    }
+
+    const end = Math.min(this.pollCursor + this.maxAccountsPerPoll, accounts.length);
+    const batch = accounts.slice(this.pollCursor, end);
+    this.pollCursor = end >= accounts.length ? 0 : end;
+    return batch;
   }
 }
 

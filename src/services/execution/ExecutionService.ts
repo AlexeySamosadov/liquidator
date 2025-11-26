@@ -43,7 +43,7 @@ class ExecutionService {
   };
 
   constructor(
-    private readonly monitoringService: MonitoringService,
+    private readonly monitoringService: MonitoringService | null,
     private readonly liquidationEngine: LiquidationEngine,
     private readonly config: BotConfig,
   ) {}
@@ -157,7 +157,7 @@ class ExecutionService {
       this.cleanupCooldowns(now);
       this.cleanupRetries(now);
 
-      const positions = this.monitoringService.getLiquidatablePositions();
+      const positions = this.monitoringService ? this.monitoringService.getLiquidatablePositions() : [];
       if (!positions.length) {
         return;
       }

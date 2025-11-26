@@ -1,4 +1,4 @@
-import { Contract, JsonRpcProvider } from 'ethers';
+import { Contract, JsonRpcProvider, WebSocketProvider } from 'ethers';
 import { logger } from '../utils/logger';
 import { Address } from '../types';
 import { COMPTROLLER_ABI } from './abis/Comptroller.abi';
@@ -8,8 +8,10 @@ import { LIQUIDATOR_ABI } from './abis/Liquidator.abi';
 import { IComptroller, IPriceOracle, IVToken, ILiquidator } from './interfaces';
 import { getVTokenForUnderlying } from '../config/vTokens';
 
+type Provider = JsonRpcProvider | WebSocketProvider;
+
 class VenusContracts {
-  private readonly provider: JsonRpcProvider;
+  private readonly provider: Provider;
 
   private readonly comptroller: IComptroller;
 
@@ -19,9 +21,23 @@ class VenusContracts {
 
   private marketsCache?: Address[];
 
-  constructor(provider: JsonRpcProvider, comptrollerAddress: Address) {
+  constructor(provider: Provider, comptrollerAddress: Address) {
     this.provider = provider;
     this.comptroller = new Contract(comptrollerAddress, COMPTROLLER_ABI, provider) as IComptroller;
+  }
+
+  /**
+   * Get the underlying provider (for event subscriptions)
+   */
+  getProvider(): Provider {
+    return this.provider;
+  }
+
+  /**
+   * Check if provider is WebSocket
+   */
+  isWebSocketProvider(): boolean {
+    return this.provider instanceof WebSocketProvider;
   }
 
   async initialize(): Promise<void> {

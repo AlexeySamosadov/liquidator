@@ -8,6 +8,7 @@ import {
   LiquidationResult,
 } from '../../types';
 import { logger } from '../../utils/logger';
+import { getLiquidationIncentiveDecimal } from './LiquidationIncentiveHelper';
 import ProfitabilityCalculator from './ProfitabilityCalculator';
 import TransactionBuilder from './TransactionBuilder';
 import StandardLiquidator from './StandardLiquidator';
@@ -55,8 +56,17 @@ class LiquidationEngine {
   ) {}
 
   async initialize(): Promise<void> {
-    const incentiveMantissa = await this.venusContracts.getComptroller().liquidationIncentiveMantissa();
-    this.liquidationBonusPercent = (Number(incentiveMantissa) / 1e18 - 1) * 100;
+    // Получаем liquidation incentive через вспомогательную функцию
+    logger.info('Получаем ликвидационный бонус из Diamond Core Pool...');
+
+    const liquidatorIncentiveDecimal = await getLiquidationIncentiveDecimal(this.venusContracts);
+
+    // Результат - проценты от бонуса
+    this.liquidationBonusPercent = (liquidatorIncentiveDecimal - 1) * 100;
+    logger.info('Liquidation bonus calculated and set', {
+      bonusPercent: this.liquidationBonusPercent,
+      incentiveDecimal: liquidatorIncentiveDecimal
+    });
 
     this.profitabilityCalculator = new ProfitabilityCalculator(this.config, this.provider, this.priceService);
     this.transactionBuilder = new TransactionBuilder(this.config, this.provider);

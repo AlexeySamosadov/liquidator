@@ -2,12 +2,15 @@ import { JsonRpcProvider, Wallet, formatEther } from 'ethers';
 import { loadConfig } from './config';
 import { logger, logBotStart } from './utils/logger';
 import VenusContracts from './contracts';
-import { MonitoringService } from './services/monitoring';
+import { MonitoringService, ProtocolScanService } from './services/monitoring';
 import { LiquidationEngine } from './services/liquidation';
 import { ExecutionService } from './services/execution';
 import PriceService from './services/pricing/PriceService';
+import { SnapshotService } from './services/snapshot';
+import HealthFactorCalculator from './services/monitoring/HealthFactorCalculator';
+import { MonitoringMode } from './types';
 
-let monitoringService: MonitoringService | null = null;
+let monitoringService: any = null;
 let liquidationEngine: LiquidationEngine | null = null;
 let executionService: ExecutionService | null = null;
 let statsInterval: NodeJS.Timeout | null = null;
@@ -35,23 +38,53 @@ async function main(): Promise<void> {
 
     const priceService = new PriceService(venusContracts);
 
-    const incentiveMantissa = await venusContracts
-      .getComptroller()
-      .liquidationIncentiveMantissa();
-
-    const bonusMantissa = incentiveMantissa - 1_000_000_000_000_000_000n;
-    const bonusPercent = Number(bonusMantissa) / 1e16;
-    logger.info('Liquidation bonus', { bonusPercent, incentiveMantissa: incentiveMantissa.toString() });
-
-    monitoringService = new MonitoringService(venusContracts, provider, config, priceService);
-    await monitoringService.initialize();
-    await monitoringService.start();
-    logger.info('Monitoring service started');
-
+    // Initialize liquidation engine regardless of monitoring mode
     liquidationEngine = new LiquidationEngine(venusContracts, signer, provider, config, priceService);
     await liquidationEngine.initialize();
     logger.info('Liquidation engine initialized');
 
+    // Conditional initialization based on monitoring mode
+    if (config.monitoringMode === MonitoringMode.ENABLED) {
+      monitoringService = new MonitoringService(venusContracts, provider, config, priceService);
+      await monitoringService.initialize();
+      await monitoringService.start();
+      logger.info('Monitoring service started');
+    } else if (config.monitoringMode === MonitoringMode.PROTOCOL_SCAN) {
+      // NEW: Use comprehensive protocol position scanning instead of event-based monitoring
+      monitoringService = new ProtocolScanService(venusContracts, provider, config, priceService);
+      await monitoringService.initialize();
+      await monitoringService.start();
+      logger.info('Protocol position scanning started');
+      logger.info('🎯 Now scanning ALL Venus protocol positions, not just event-driven accounts');
+    } else if (config.monitoringMode === MonitoringMode.LIQUIDATION_ONLY) {
+      // Create snapshot-driven monitoring
+      const healthFactorCalculator = new HealthFactorCalculator(venusContracts);
+      const snapshotService = new SnapshotService(
+        venusContracts,
+        healthFactorCalculator,
+        async (account) => {
+          // Setup minimal monitoring that only processes known positions
+          logger.info('Discovered position from snapshot', { account });
+          // This would integrate with a simplified monitoring system
+        },
+        {
+          enabled: true,
+          updateIntervalMs: 300000, // 5 minutes
+          minPositionSizeUsd: config.minPositionSizeUsd,
+          topNPositions: 100,
+          externalApiUrl: process.env.SNAPSHOT_API_URL || '',
+          snapshotFile: process.env.SNAPSHOT_FILE || '',
+        },
+        provider,
+      );
+
+      await snapshotService.start();
+      logger.info('Snapshot-based monitoring started');
+    } else {
+      logger.info('Monitoring service skipped (monitoring mode: DISABLED)');
+    }
+
+    // Always initialize execution service
     executionService = new ExecutionService(
       monitoringService,
       liquidationEngine,
@@ -62,35 +95,50 @@ async function main(): Promise<void> {
     logger.info('Execution service started', {
       intervalMs: config.execution?.intervalMs,
       maxRetries: config.execution?.maxRetries,
+      monitoringMode: config.monitoringMode,
     });
 
-    statsInterval = setInterval(() => {
-      if (monitoringService && executionService) {
-        const monitoringStats = monitoringService.getStats();
-        const executionStats = executionService.getStats();
+    // Only start stats logging if monitoring is enabled
+    if (config.monitoringMode === MonitoringMode.ENABLED || config.monitoringMode === MonitoringMode.LIQUIDATION_ONLY) {
+      statsInterval = setInterval(() => {
+        if (executionService) {
+          const executionStats = executionService.getStats();
 
-        logger.info('Periodic stats report', {
-          monitoring: {
-            accountsTracked: monitoringStats.totalAccountsTracked,
-            liquidatablePositions: monitoringStats.liquidatablePositions,
-            avgHealthFactor: monitoringStats.averageHealthFactor.toFixed(3),
-            eventsProcessed: monitoringStats.eventsProcessed,
-          },
-          execution: {
-            isRunning: executionStats.isRunning,
-            totalExecutions: executionStats.totalExecutions,
-            successRate: executionStats.totalExecutions > 0
-              ? `${((executionStats.successfulExecutions / executionStats.totalExecutions) * 100).toFixed(1)}%`
-              : 'N/A',
-            avgExecutionTimeMsPerAttempt: executionStats.averageExecutionTimeMs.toFixed(0),
-            positionsInRetry: executionStats.positionsInRetry,
-            positionsInCooldown: executionStats.positionsInCooldown,
-          },
-        });
-      }
-    }, config.statsLoggingIntervalMs || 60000);
+          const statsReport: any = {
+            execution: {
+              isRunning: executionStats.isRunning,
+              totalExecutions: executionStats.totalExecutions,
+              successRate: executionStats.totalExecutions > 0
+                ? `${((executionStats.successfulExecutions / executionStats.totalExecutions) * 100).toFixed(1)}%`
+                : 'N/A',
+              avgExecutionTimeMsPerAttempt: executionStats.averageExecutionTimeMs.toFixed(0),
+              positionsInRetry: executionStats.positionsInRetry,
+              positionsInCooldown: executionStats.positionsInCooldown,
+            },
+            rpcTelemetry: {
+              priceService: priceService.getTelemetry(),
+            },
+          };
 
-    logger.info('Stats logging started', { intervalMs: config.statsLoggingIntervalMs || 60000 });
+          // Only include monitoring stats if monitoring service is available
+          if (monitoringService) {
+            const monitoringStats = monitoringService.getStats();
+            statsReport.monitoring = {
+              accountsTracked: monitoringStats.totalAccountsTracked,
+              liquidatablePositions: monitoringStats.liquidatablePositions,
+              avgHealthFactor: monitoringStats.averageHealthFactor.toFixed(3),
+              eventsProcessed: monitoringStats.eventsProcessed,
+            };
+            statsReport.rpcTelemetry.historicalScan = monitoringStats.rpcTelemetry?.historicalScan;
+            statsReport.rpcTelemetry.polling = monitoringStats.rpcTelemetry?.polling;
+          }
+
+          logger.info('Periodic stats report', statsReport);
+        }
+      }, config.statsLoggingIntervalMs || 60000);
+
+      logger.info('Stats logging started', { intervalMs: config.statsLoggingIntervalMs || 60000 });
+    }
   } catch (error) {
     logger.error('Failed during initialization', { error });
     process.exit(1);

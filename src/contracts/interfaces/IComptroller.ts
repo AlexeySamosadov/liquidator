@@ -12,5 +12,15 @@ export interface IComptroller extends Contract {
   getAssetsIn(account: Address): Promise<Address[]>;
   oracle(): Promise<Address>;
   liquidatorContract(): Promise<Address>;
-  liquidationIncentiveMantissa(): Promise<bigint>;
+  // ✅ Коментируем устаревшую функцию
+  // liquidationIncentiveMantissa(): Promise<bigint>;
+  // ✅ Добавляем новые функции Diamond для получения LI по рынку
+  getLiquidationIncentive(vToken: Address): Promise<bigint>;
+  getEffectiveLiquidationIncentive(account: Address, vToken: Address): Promise<bigint>;
+  markets(vToken: Address): Promise<{
+    isListed: boolean;
+    collateralFactorMantissa: bigint;
+    liquidationThresholdMantissa: bigint;
+    liquidationIncentiveMantissa: bigint;
+  }>;
 }

@@ -20,12 +20,37 @@ export enum LiquidationMode {
   HYBRID = 'HYBRID',
 }
 
+export enum MonitoringMode {
+  ENABLED = 'ENABLED',
+  DISABLED = 'DISABLED',
+  LIQUIDATION_ONLY = 'LIQUIDATION_ONLY',
+  PROTOCOL_SCAN = 'PROTOCOL_SCAN', // New mode for comprehensive position scanning
+}
+
 export enum LogLevel {
   INFO = 'info',
   DEBUG = 'debug',
   WARN = 'warn',
   ERROR = 'error',
 }
+
+// Multi-chain support
+export enum Chain {
+  BSC = 'BSC',
+  ARBITRUM = 'ARBITRUM',
+  AVALANCHE = 'AVALANCHE',
+}
+
+export enum Protocol {
+  VENUS = 'VENUS',
+  GMX = 'GMX',
+}
+
+export const CHAIN_IDS: Record<Chain, number> = {
+  [Chain.BSC]: 56,
+  [Chain.ARBITRUM]: 42161,
+  [Chain.AVALANCHE]: 43114,
+};
 
 export interface VenusAddresses {
   comptroller: Address;
@@ -37,10 +62,39 @@ export interface DexAddresses {
   pancakeswapV3Factory?: Address;
 }
 
+// GMX V2 Addresses
+export interface GMXAddresses {
+  marketFactory: Address;
+  exchangeRouter: Address;
+  depositVault: Address;
+  reader?: Address;
+  dataStore?: Address;
+}
+
+// Multi-chain configuration
+export interface ChainConfig {
+  chain: Chain;
+  rpcUrl: string;
+  wssUrl?: string;  // WebSocket URL for real-time events
+  privateRpcUrl?: string;  // bloXroute or private relay
+  chainId: number;
+  protocol: Protocol;
+  venus?: VenusAddresses;
+  gmx?: GMXAddresses;
+  dex: DexAddresses;
+}
+
 export interface BotConfig {
+  // Legacy single-chain config (for backward compatibility)
   rpcUrl: string;
   chainId: number;
   privateKey: string;
+
+  // Multi-chain support
+  chains?: ChainConfig[];  // For running bot on multiple chains simultaneously
+  enabledProtocols?: Protocol[];  // Which protocols to monitor (VENUS, GMX, etc.)
+
+  // Common bot parameters
   minProfitUsd: number;
   minPositionSizeUsd: number;
   maxPositionSizeUsd: number;
@@ -54,20 +108,37 @@ export interface BotConfig {
   maxPriceImpact: number;
   preferredStablecoin?: Address;
   pollingIntervalMs: number;
+  pollingBatchSize?: number;
   minHealthFactor: number;
   logLevel: LogLevel;
   logToFile: boolean;
+
+  // Protocol-specific addresses (legacy)
   venus: VenusAddresses;
   dex: DexAddresses;
+  gmx?: GMXAddresses;
+
+  // Advanced features
   flashLiquidatorContract?: Address;
+  enableHistoricalScan?: boolean;
+  monitoringMode?: MonitoringMode;
   healthyPollsBeforeDrop?: number;
   tokenBlacklist?: Address[];
   tokenWhitelist?: Address[];
   maxDailyLossUsd?: number;
   emergencyStopFile?: string;
   dryRun?: boolean;
-  execution?: ExecutionConfig;
   statsLoggingIntervalMs?: number;
+  historicalScanBlocks?: number;
+  historicalScanWindowBlocks?: number;
+  execution?: ExecutionConfig;
+
+  // Scan configuration parameters
+  scanIntervalMs?: number;
+  scanBatchSize?: number;
+  scanWindowBlocks?: number;
+  rpcDelayMs?: number;
+  maxNodeRealBlocks?: number;
 }
 
 export interface AccountLiquidity {
@@ -110,7 +181,50 @@ export interface VenusPosition {
   accountLiquidity: AccountLiquidity;
 }
 
-export type MonitoringEventType = 'Borrow' | 'RepayBorrow' | 'Mint' | 'Redeem' | 'LiquidateBorrow';
+// GMX V2 Position Types
+export interface GMXMarket {
+  marketToken: Address;
+  indexToken: Address;
+  longToken: Address;
+  shortToken: Address;
+  marketName: string;
+}
+
+export interface GMXPosition {
+  account: Address;
+  market: Address;
+  collateralToken: Address;
+  isLong: boolean;
+  sizeInUsd: bigint;
+  sizeInTokens: bigint;
+  collateralAmount: bigint;
+  borrowingFactor: bigint;
+  fundingFeeAmountPerSize: bigint;
+  longTokenClaimableFundingAmountPerSize: bigint;
+  shortTokenClaimableFundingAmountPerSize: bigint;
+  increasedAtBlock: bigint;
+  decreasedAtBlock: bigint;
+}
+
+export interface GMXPositionInfo {
+  position: GMXPosition;
+  marketInfo: GMXMarket;
+  collateralValueUsd: number;
+  sizeValueUsd: number;
+  leverage: number;
+  liquidationPrice: number;
+  unrealizedPnlUsd: number;
+  healthFactor: number;  // Distance to liquidation
+  lastUpdated: number;
+}
+
+export interface GMXLiquidatablePosition extends GMXPositionInfo {
+  estimatedProfitUsd: number;
+  gasEstimate: bigint;
+}
+
+export type MonitoringEventType = 'Borrow' | 'RepayBorrow' | 'Mint' | 'Redeem' | 'LiquidateBorrow' |
+  'PositionIncrease' | 'PositionDecrease' | 'PositionLiquidation';
 
 export interface MonitoringEvent {
   type: MonitoringEventType;
@@ -137,6 +251,21 @@ export interface MonitoringStats {
   lastPollTimestamp: number;
   eventsProcessed: number;
   averageHealthFactor: number;
+  rpcTelemetry?: {
+    historicalScan?: {
+      queryCount: number;
+      windowCount: number;
+      totalLogs: number;
+    };
+    polling?: {
+      totalPolled: number;
+      pollCount: number;
+      failedPolls: number;
+      successfulUpdates: number;
+      avgPollDurationMs: number;
+      avgSuccessRate: number;
+    };
+  };
 }
 
 export interface PositionTrackerStats {
