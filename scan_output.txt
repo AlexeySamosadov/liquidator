@@ -1,0 +1,433 @@
+
+> venus-liquidation-bot@1.0.0 gmx:scan:sdk
+> ts-node src/scripts/scanGMXWithSDK.ts
+
+[2025-11-26 18:30:51] [32minfo[39m: ================================================================================
+[2025-11-26 18:30:51] [32minfo[39m: GMX V2 Position Scanner - Official SDK
+[2025-11-26 18:30:51] [32minfo[39m: ================================================================================
+[2025-11-26 18:30:51] [32minfo[39m: Loading GMX SDK...
+[2025-11-26 18:30:51] [32minfo[39m: ✅ GMX SDK loaded
+[2025-11-26 18:30:51] [32minfo[39m: Creating SDK instance...
+[2025-11-26 18:30:51] [32minfo[39m: ✅ SDK initialized {"chainId":42161,"oracleUrl":"https://arbitrum-api.gmxinfra.io","subsquidUrl":"https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql"}
+[2025-11-26 18:30:51] [32minfo[39m: 
+--------------------------------------------------------------------------------
+[2025-11-26 18:30:51] [32minfo[39m: Step 1: Fetching Markets Info
+[2025-11-26 18:30:51] [32minfo[39m: --------------------------------------------------------------------------------
+(node:90083) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[2025-11-26 18:30:58] [32minfo[39m: ✅ Markets loaded: 99
+[2025-11-26 18:30:58] [32minfo[39m: ✅ Tokens loaded: 97
+[2025-11-26 18:30:58] [32minfo[39m: 
+📊 Available Markets:
+[2025-11-26 18:30:58] [32minfo[39m:   0x47c03123... - BTC/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x70d95587... - ETH/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x6853EA96... - DOGE/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x09400D9D... - SOL/USD [SOL-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD9535bB5... - LTC/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xc7Abb2C5... - UNI/USD [UNI-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7f1fa204... - LINK/USD [LINK-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xC25cEf60... - ARB/USD [ARB-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x9C2433dF... - SWAP-ONLY [USDC-USDC.E]
+[2025-11-26 18:30:58] [32minfo[39m:   0xB686BcB1... - SWAP-ONLY [USDC-USDT]
+[2025-11-26 18:30:58] [32minfo[39m:   0xe2fEDb9e... - SWAP-ONLY [USDC-DAI]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0CCB4fAa... - XRP/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x2d340912... - BNB/USD [BNB-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x1CbBa634... - AAVE/USD [AAVE-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x248C3576... - ATOM/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x63Dc80EE... - NEAR/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7BbBf946... - AVAX/USD [AVAX-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x4fDd333F... - OP/USD [OP-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7C11F78C... - BTC/USD [BTC-BTC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x450bb677... - ETH/USD [WETH-WETH]
+[2025-11-26 18:30:58] [32minfo[39m:   0x55391D17... - GMX/USD [GMX-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x2b477989... - kPEPE/USD [PEPE-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0418643F... - WIF/USD [WIF-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0Cf1fb4d... - ETH/USD [WSTETH-USDE]
+[2025-11-26 18:30:58] [32minfo[39m:   0xb56E5E2e... - SWAP-ONLY [WSTETH-WETH]
+[2025-11-26 18:30:58] [32minfo[39m:   0x45aD16Aa... - SWAP-ONLY [USDE-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xB6236975... - kSHIB/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD9377d9B... - STX/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x93385F7C... - ORDI/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xd6206869... - BTC/USD [TBTC-TBTC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD4b73789... - EIGEN/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x8ea4Fb80... - mSATS/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD0a1AFDD... - POL/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x77B2eC35... - AAVE/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD8471b9E... - UNI/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0Bb2a83F... - kPEPE/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xdAB21c4d... - APE/USD [APE-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x6Ecf2133... - SUI/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xB489711B... - SEI/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x66A69c8e... - APT/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xBeB1f4EB... - TIA/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x3680D7bF... - TRX/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x15c6eBD4... - TON/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xe55e1A29... - TAO/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xFaC5fF56... - kBONK/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x872b5D56... - WLD/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x71237F8C... - BOME/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x6CB901Cc... - MEME/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xfD46a570... - kFLOKI/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x71B7fF59... - MEW/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x784292E8... - PENDLE/USD [PENDLE-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xbD481496... - GMX/USD [GMX-GMX]
+[2025-11-26 18:30:58] [32minfo[39m:   0xcaCb9641... - ADA/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x62feB8Ec... - BCH/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7B2D09fc... - DOT/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xdc4e96A2... - ICP/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xe902D152... - XLM/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x4c505e00... - RENDER/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xf22CFFA7... - SOL/USD [SOL-SOL]
+[2025-11-26 18:30:58] [32minfo[39m:   0x262B5203... - FIL/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x16466a03... - INJ/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x467C4A46... - DYDX/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xFec8f404... - TRUMP/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x12fD1A4B... - MELANIA/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x9F159014... - ENA/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xD60f1BA6... - AI16Z/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x5707673D... - ANIME/USD [ANIME-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xe2730Ffe... - FARTCOIN/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x876Ff160... - BERA/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xE61e608B... - LDO/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0c11Ed89... - PENGU/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x75F190E0... - VIRTUAL/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xa8A455Ed... - ONDO/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x970e578f... - FET/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x04DecfB3... - AIXBT/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xdE967676... - CAKE/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x4d9bA415... - S/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xBcb8FE13... - HYPE/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7DE8E1A1... - JUP/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x89EB7867... - OM/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x2aE5c5Cd... - MKR/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x4D3Eb91e... - DOLO/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x9e79146b... - ZRO/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x2523B892... - MOODENG/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x7c54D547... - XMR/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x39AC3C49... - PI/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x0e46941F... - CRV/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x4C0Bb704... - PUMP/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x672fEA44... - ARB/USD [ARB-ARB]
+[2025-11-26 18:30:58] [32minfo[39m:   0x8263bC37... - SPX6900/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x40dAEAc0... - MNT/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x3B7f4e4C... - ALGO/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x9f0849FB... - HBAR/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0xa29FfE41... - CRO/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x2a331e51... - OKB/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x41E3bC5B... - CVX/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x40244185... - KAS/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x3f649eab... - WIF/USD [BTC-USDC]
+[2025-11-26 18:30:58] [32minfo[39m:   0x6EeE8098... - BRETT/USD [WETH-USDC]
+[2025-11-26 18:30:58] [32minfo[39m: 
+--------------------------------------------------------------------------------
+[2025-11-26 18:30:58] [32minfo[39m: Step 2: Fetching Open Positions
+[2025-11-26 18:30:58] [32minfo[39m: --------------------------------------------------------------------------------
+[2025-11-26 18:30:58] [32minfo[39m: 
+Attempting to fetch positions from Subsquid GraphQL...
+[2025-11-26 18:30:59] [32minfo[39m: ✅ Found 1000 open positions from GraphQL!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$65765822.43","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 4.737395892186435e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$65765822.43","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 4.737395892186435e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x70d95587...","isLong":"SHORT","sizeUsd":"$56698600.91","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.2303610317675816e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xAb3067C5... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$54921290.99","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.8005988024807636e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xAB16439E... {"market":"0x70d95587...","isLong":"SHORT","sizeUsd":"$51610404.65","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0001211696337626e+26x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$51555036.87","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.0840530543608085e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x70d95587...","isLong":"LONG","sizeUsd":"$50832242.55","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 51717385852076160.00x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x7Ab8C59D... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$50025320.68","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 4.001396164169072e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$48941861.62","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.242844095163128e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$47937489.15","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 4.659014921757065e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xfD90cCDA... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$47719620.44","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 8.951992676162386e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xAB16439E... {"market":"0x70d95587...","isLong":"SHORT","sizeUsd":"$47261692.67","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 6.93627899005212e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$45967749.44","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.693354061878004e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$44511267.70","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.638688468333788e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$44511267.70","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.638688468333788e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$44511267.70","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.638688468333788e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$44511267.70","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.638688468333788e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xAb3067C5... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$41400626.34","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.8243946614097865e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x43e37ae7... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$41108502.85","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 8.98294046696188e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xfD90cCDA... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$40587749.56","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 7.168838448910221e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x70d95587...","isLong":"SHORT","sizeUsd":"$39381065.06","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.334820775477521e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$37176061.35","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 3.997698231183101e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$35159805.18","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.7815538279013491e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$35159805.18","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.7815538279013491e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x1640e916... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$34808466.41","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.8519989711688814e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$34293168.77","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 8.668278173960314e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x7Ab8C59D... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$33427116.83","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.546573001054119e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x92812499... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31928945.84","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.2668408115472444e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x92812499... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31928945.84","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.2668408115472444e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31320855.63","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0497507335541509e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31320855.63","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0497507335541509e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31320855.63","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0497507335541509e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$31320855.63","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0497507335541509e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$30579472.52","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 1.0565868085302065e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"SHORT","sizeUsd":"$29902014.08","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 7.643747419710111e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0xe4d31c25... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29711788.54","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 5.246081819498941e+25x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+Position: 0x08c788aF... {"market":"0x47c03123...","isLong":"LONG","sizeUsd":"$29661572.40","collateral":"$0.00"}
+[2025-11-26 18:30:59] [32minfo[39m:   Leverage: 2.1225787023707836e+28x, Estimated HF: 0.0000
+[2025-11-26 18:30:59] [32minfo[39m:   🎯 POTENTIALLY LIQUIDATABLE!
+[2025-11-26 18:30:59] [32minfo[39m: 
+================================================================================
+[2025-11-26 18:30:59] [32minfo[39m: SCAN RESULTS
+[2025-11-26 18:30:59] [32minfo[39m: ================================================================================
+[2025-11-26 18:30:59] [32minfo[39m: 
+📊 Total positions found: 1000
+[2025-11-26 18:30:59] [32minfo[39m: 🎯 Potentially liquidatable: 50
+[2025-11-26 18:30:59] [32minfo[39m: ⚠️  High risk (HF < 1.2): 0
+[2025-11-26 18:30:59] [32minfo[39m: 
+🎯 LIQUIDATABLE POSITIONS:
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x70d95587...
+[2025-11-26 18:30:59] [32minfo[39m:   0xAb3067C58811aDE7aA17B58808Db3b4c2E86f603 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xAB16439ECA445Bd06fb8ca3D22a4904cdfed1809 - 0x70d95587...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x70d95587...
+[2025-11-26 18:30:59] [32minfo[39m:   0x7Ab8C59Db7b959Bb8C3481d5b9836dfbc939AF21 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xfD90cCDA778a03099FDBFAbf3E77F9a0f5c24065 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xAB16439ECA445Bd06fb8ca3D22a4904cdfed1809 - 0x70d95587...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xAb3067C58811aDE7aA17B58808Db3b4c2E86f603 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x43e37ae780aAc89Aadd10097Bd90d5a79e1192ed - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xfD90cCDA778a03099FDBFAbf3E77F9a0f5c24065 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x70d95587...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x1640e916e10610Ba39aAC5Cd8a08acF3cCae1A4c - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x7Ab8C59Db7b959Bb8C3481d5b9836dfbc939AF21 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x92812499fF2c040f93121Aab684680a6e603C4A7 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x92812499fF2c040f93121Aab684680a6e603C4A7 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0xe4d31c2541A9cE596419879B1A46Ffc7cD202c62 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m:   0x08c788aFdACF6cf81180D2bBBE42A7434D0C7A92 - 0x47c03123...
+[2025-11-26 18:30:59] [32minfo[39m: 
+--------------------------------------------------------------------------------
+[2025-11-26 18:30:59] [32minfo[39m: Step 3: Trying SDK Positions Methods
+[2025-11-26 18:30:59] [32minfo[39m: --------------------------------------------------------------------------------
+[2025-11-26 18:30:59] [32minfo[39m: SDK has positions module, attempting to fetch...
+{
+  reader: {
+    positions: ContractFunctionExecutionError: The contract function "getAccountPositionInfoList" returned no data ("0x").
+    
+    This could be due to any of the following:
+      - The contract does not have the function "getAccountPositionInfoList",
+      - The parameters passed to the contract function may be invalid, or
+      - The address is not a contract.
+     
+    Contract Call:
+      address:   0x65A6CC451BAfF7e7B4FDAb4157763aB4b6b44D0E
+      function:  getAccountPositionInfoList(address dataStore, address referralStorage, address account, address[] markets, ((uint256 min, uint256 max), (uint256 min, uint256 max), (uint256 min, uint256 max))[], address uiFeeReceiver, uint256 start, uint256 end)
+      args:                                (0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8, 0xe6fab3f0c7199b0d34d7fbe83394fc0e0d06e99d, undefined, [], [], 0x0000000000000000000000000000000000000000, 0, 1000)
+    
+    Docs: https://viem.sh/docs/contract/multicall
+    Version: viem@2.40.3
+        at getContractError (/Users/alexey/projects/Liqvidator/node_modules/viem/utils/errors/getContractError.ts:81:10)
+        at multicall (/Users/alexey/projects/Liqvidator/node_modules/viem/actions/public/multicall.ts:293:39)
+        ... 3 lines matching cause stack trace ...
+        at async scanWithSDK (/Users/alexey/projects/Liqvidator/src/scripts/scanGMXWithSDK.ts:178:33) {
+      cause: [ContractFunctionZeroDataError],
+      details: undefined,
+      docsPath: '/docs/contract/multicall',
+      metaMessages: [Array],
+      shortMessage: 'The contract function "getAccountPositionInfoList" returned no data ("0x").',
+      version: '2.40.3',
+      abi: [Array],
+      args: [Array],
+      contractAddress: '0x65A6CC451BAfF7e7B4FDAb4157763aB4b6b44D0E',
+      formattedArgs: undefined,
+      functionName: 'getAccountPositionInfoList',
+      sender: undefined
+    }
+  }
+}
+[2025-11-26 18:30:59] [32minfo[39m: Positions result: {"positionsData":{}}
+[2025-11-26 18:30:59] [32minfo[39m: 
+================================================================================
+[2025-11-26 18:30:59] [32minfo[39m: Scan completed
+[2025-11-26 18:30:59] [32minfo[39m: ================================================================================
+[2025-11-26 18:30:59] [32minfo[39m: Scanner finished
