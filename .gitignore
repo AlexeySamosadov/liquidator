@@ -38,3 +38,15 @@ coverage/
 *.swp
 .vscode/
 .idea/
+
+# Data files and snapshots (large files)
+data/
+*_snapshot.json
+monitoring_history.json
+daily_stats.json
+emergency_stop.flag
+verified_positions.json
+realistic_small_positions.json
+full_protocol_snapshot.json
+healthcare_snapshot.json
+small_positions_snapshot.json
