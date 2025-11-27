@@ -141,8 +141,8 @@ class PositionMonitor {
     private isLiquidating = false; // Prevent double liquidation
     private blocksChecked = 0;
 
-    // Display interval (ms) - show status every 10 seconds for humans
-    private readonly DISPLAY_INTERVAL = 10000;
+    // Display interval (ms) - show status every 60 seconds for humans
+    private readonly DISPLAY_INTERVAL = 60000;
     // Bot checks EVERY block (~250ms on Arbitrum)
     private readonly CHECK_INTERVAL = 250;
 
