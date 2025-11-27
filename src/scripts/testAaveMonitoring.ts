@@ -61,4 +61,4 @@ if (require.main === module) {
         });
 }
 
-export { test AaveMonitoring };
+export { testAaveMonitoring };

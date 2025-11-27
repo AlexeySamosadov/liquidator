@@ -38,6 +38,7 @@ const ARBITRUM_RPC = process.env.ARBITRUM_RPC || "https://arb1.arbitrum.io/rpc";
 const ARBITRUM_WSS = process.env.ARBITRUM_WSS || "wss://arb1.arbitrum.io/ws"; // WebSocket
 const PRIVATE_KEY = process.env.PRIVATE_KEY!;
 const FLASH_LIQUIDATOR_ADDRESS = "0x9a55132AA9C800A81f73eB24C9732d52Aa3eced4";
+const AUTO_EXECUTE_AUTO = (process.env.AUTO_EXECUTE_AUTO || "false").toLowerCase() === "true";
 
 // Tokens on Arbitrum
 const TOKENS = {
@@ -51,75 +52,151 @@ const TOKENS = {
     LINK: "0xf97f4df75117a78c1A5a0DBb814Af92458539FB4",
 };
 
-// Positions to watch - sorted by risk (lowest HF first)
-const WATCHED_POSITIONS = [
-    // 🔴 CRITICAL - HF < 1.01
+// Positions to watch (manual base set) + AUTO candidates from data/aave_candidates.json
+// Updated 2025-11-27
+interface WatchedPosition {
+    user: string;
+    name: string;
+    debtToken: string;
+    collateralToken: string;
+    debtDecimals: number;
+    poolFee: number;
+    monitorOnly?: boolean; // if true, we will not execute liquidation automatically
+}
+
+function manualPositions(): WatchedPosition[] { return [
+    // 🔴 CRITICAL - HF 1.004, closest to liquidation!
     {
         user: "0x006c6daf53ad20a2149560129062a5b4d7aea991",
-        name: "#1 wstETH/WETH $2749",
+        name: "#0 wstETH/WETH $2.7K HF:1.004 🔴",
         debtToken: TOKENS.WETH,
         collateralToken: TOKENS.wstETH,
         debtDecimals: 18,
         poolFee: 100, // 0.01% for correlated assets
     },
+    // 🟡 HF ~1.05 - Volatile assets, high profit potential
     {
-        user: "0x00c08911d0fcc1a1e9c567cac771c48f2efc4a24",
-        name: "#2 LINK/USDC $4.87",
-        debtToken: TOKENS.LINK,
-        collateralToken: TOKENS.USDC,
-        debtDecimals: 18,
-        poolFee: 3000,
-    },
-    // 🟠 WARNING - HF < 1.05
-    {
-        user: "0x015d100e8870e49ed160db59fb0ed5e220b392ce",
-        name: "#3 DAI/USDCe $1.00",
-        debtToken: TOKENS.DAI,
-        collateralToken: TOKENS.USDCe,
-        debtDecimals: 18,
-        poolFee: 100,
-    },
-    {
-        user: "0x012e414b3043e5de1714cc0a03fa6e0125efd80e",
-        name: "#4 Multi-token $0.90",
+        user: "0x1889aaac3bde2ea77e4423b3d0d696ec53f821d3",
+        name: "#1 $7.1K debt HF:1.049",
         debtToken: TOKENS.USDC,
         collateralToken: TOKENS.WETH,
         debtDecimals: 6,
         poolFee: 500,
     },
     {
-        user: "0x00febc822e74614296b9c11ecdf3e86646bfa8a7",
-        name: "#5 USDT/USDCe $52",
-        debtToken: TOKENS.USDT,
-        collateralToken: TOKENS.USDCe,
-        debtDecimals: 6,
-        poolFee: 100,
-    },
-    {
-        user: "0x008fe3c1f1b39af5453f9d0bccb60443751131ef",
-        name: "#6 USDC/USDC $5010",
+        user: "0xe5e58921dfa6602792e3f5624e91d291c01dc135",
+        name: "#2 $11.4K debt HF:1.071",
         debtToken: TOKENS.USDC,
-        collateralToken: TOKENS.USDC,
-        debtDecimals: 6,
-        poolFee: 100,
-    },
-    {
-        user: "0x0125dede2b2543e9f20d1a39e602d02c9cc4ff0f",
-        name: "#7 WBTC/USDC+WETH $2533",
-        debtToken: TOKENS.WBTC,
         collateralToken: TOKENS.WETH,
-        debtDecimals: 8,
+        debtDecimals: 6,
         poolFee: 500,
     },
     {
-        user: "0x007b00d9782f048cb7203756a43c66777948a7fa",
-        name: "#8 wstETH/WETH $166",
-        debtToken: TOKENS.WETH,
-        collateralToken: TOKENS.wstETH,
-        debtDecimals: 18,
-        poolFee: 100,
+        user: "0x4e4a22d6b195da0bef7a5b18bdef64c59104211f",
+        name: "#3 $3.2K debt HF:1.076",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
     },
-];
+    // 🔵 HF ~1.08-1.09 - Large positions, big profit
+    {
+        user: "0xc3bc1a29c5feac0d852594c8a60348e9cbbb6021",
+        name: "#4 $69.9K debt HF:1.083",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0x6732f7beec125720d90cc33a9ec628cbb909c192",
+        name: "#5 $116K debt HF:1.085",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0x4218453f4ffaa2608580348628d588e1770d8417",
+        name: "#6 $16.4K debt HF:1.085",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0x464b9107bd722f0dfe9277e79c27d234de84e042",
+        name: "#7 $109K debt HF:1.089",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0xfa64ad195875e79b87cecd1a561982b51f93ca7f",
+        name: "#8 $69.3K debt HF:1.088",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0x2e2cc0c1e2e27f2e8d87786c03dfa51dd1c3b34c",
+        name: "#9 $42.4K debt HF:1.088",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+    {
+        user: "0xc9e46942e544445c709d118e0a138dab70f9e4ce",
+        name: "#10 $92K debt HF:1.092",
+        debtToken: TOKENS.USDC,
+        collateralToken: TOKENS.WETH,
+        debtDecimals: 6,
+        poolFee: 500,
+    },
+]; }
+
+// Dynamic watchlist (manual + auto)
+let WATCHED_POSITIONS: WatchedPosition[] = [];
+
+function buildWatchlist() {
+    const manual = manualPositions();
+    // Load top candidates from scanner outputs (big + small)
+    const bigPath = path.join(process.cwd(), "data/aave_candidates_enriched.json");
+    const smallPath = path.join(process.cwd(), "data/aave_candidates_small_enriched.json");
+    let rows: Array<{user: string; hf?: number; debt?: number}> = [];
+    try {
+        const load = (p: string) => {
+            if (!fs.existsSync(p)) return [] as any[];
+            const raw = fs.readFileSync(p, "utf8");
+            const parsed = JSON.parse(raw);
+            return Array.isArray(parsed) ? parsed : [];
+        };
+        rows = [...load(bigPath), ...load(smallPath)].filter((x: any) => typeof x?.user === "string");
+        // Sort by HF asc and pick top N
+        rows.sort((a, b) => (Number(a.hf ?? 1e9) - Number(b.hf ?? 1e9)));
+        rows = rows.slice(0, Number(process.env.WATCH_TOP || 50));
+    } catch {}
+
+    const auto: WatchedPosition[] = rows.map((r, idx) => ({
+        user: r.user,
+        name: `AUTO#${idx + 1} HF:${(r.hf ?? 0).toFixed?.(4) ?? r.hf} $${Math.round(r.debt ?? 0)}`,
+        debtToken: (r as any).debtToken || TOKENS.USDC,
+        collateralToken: (r as any).collToken || TOKENS.WETH,
+        debtDecimals: Number((r as any).debtDecimals ?? 6),
+        poolFee: Number((r as any).poolFee ?? 500),
+        monitorOnly: !((r as any).debtToken && (r as any).collToken && (r as any).debtDecimals),
+    }));
+
+    // Deduplicate by user, manual takes precedence
+    const map = new Map<string, WatchedPosition>();
+    for (const p of [...manual, ...auto]) {
+        if (!map.has(p.user)) map.set(p.user, p);
+    }
+    WATCHED_POSITIONS = Array.from(map.values());
+}
 
 interface PositionState {
     healthFactor: number;
@@ -157,8 +234,10 @@ class PositionMonitor {
         log("🔴 REAL-TIME LIQUIDATION BOT");
         log("=".repeat(60));
         log(`Bot: ${this.executor.getWalletAddress()}`);
+        buildWatchlist();
         log(`Contract: ${FLASH_LIQUIDATOR_ADDRESS}`);
-        log(`Watching: ${WATCHED_POSITIONS.length} positions`);
+        log(`Watching: ${WATCHED_POSITIONS.length} positions (manual+auto)`);
+        log(`AUTO_EXECUTE_AUTO=${AUTO_EXECUTE_AUTO}`);
         log(`Log file: ${LOG_FILE}`);
         log(`Events file: ${EVENTS_FILE}`);
         log("=".repeat(60));
@@ -166,6 +245,15 @@ class PositionMonitor {
         log("📊 DISPLAY: Showing status every 10 seconds\n");
 
         this.isRunning = true;
+
+        // Periodically reload watchlist (every 5 minutes)
+        setInterval(() => {
+            const prev = WATCHED_POSITIONS.length;
+            buildWatchlist();
+            if (WATCHED_POSITIONS.length !== prev) {
+                log(`🔄 Watchlist reloaded: ${WATCHED_POSITIONS.length} positions`);
+            }
+        }, 5 * 60 * 1000);
 
         // Start fast polling for liquidation opportunities
         this.startFastBot();
@@ -221,9 +309,14 @@ class PositionMonitor {
 
                 // 🔥 INSTANT LIQUIDATION CHECK - no delays!
                 if (hf < 1.0 && !this.isLiquidating) {
+                    const canExecute = AUTO_EXECUTE_AUTO || !pos.monitorOnly;
                     this.isLiquidating = true;
-                    log(`\n⚡ [${new Date().toISOString()}] HF=${hf.toFixed(6)} < 1.0 DETECTED! ${pos.name}`, "LIQUIDATION");
-                    await this.executeLiquidation(pos, debtUSD);
+                    if (!canExecute) {
+                        log(`\n⚡ [${new Date().toISOString()}] HF=${hf.toFixed(6)} < 1.0 DETECTED (monitor-only): ${pos.user}`, "LIQUIDATION");
+                    } else {
+                        log(`\n⚡ [${new Date().toISOString()}] HF=${hf.toFixed(6)} < 1.0 DETECTED! ${pos.name}`, "LIQUIDATION");
+                        await this.executeLiquidation(pos as any, debtUSD);
+                    }
                     this.isLiquidating = false;
                 }
                 
@@ -252,7 +345,7 @@ class PositionMonitor {
      * Human-readable status display (every 10 seconds)
      */
     private displayStatus(
-        pos: typeof WATCHED_POSITIONS[0],
+        pos: WatchedPosition,
         hf: number,
         debtUSD: number,
         collateralUSD: number,
@@ -353,8 +446,10 @@ class PositionMonitor {
                     console.log("\n" + "🔥".repeat(30));
                     console.log("🚨 LIQUIDATION OPPORTUNITY DETECTED!");
                     console.log("🔥".repeat(30));
-                    
-                    await this.executeLiquidation(pos, debtUSD);
+                    const canExecute = AUTO_EXECUTE_AUTO || !pos.monitorOnly;
+                    if (canExecute) {
+                        await this.executeLiquidation(pos as any, debtUSD);
+                    }
                 }
 
             } catch (error: any) {
@@ -364,7 +459,7 @@ class PositionMonitor {
     }
 
     private async executeLiquidation(
-        pos: typeof WATCHED_POSITIONS[0],
+        pos: WatchedPosition,
         debtUSD: number
     ) {
         log(`\n⚡ Attempting to liquidate ${pos.name}...`, "LIQUIDATION");
@@ -395,43 +490,7 @@ class PositionMonitor {
 
             log(`   Debt to cover: ${ethers.utils.formatUnits(debtToCover, pos.debtDecimals)}`, "LIQUIDATION");
 
-            // Simulate first with position's preferred pool fee
-            log("   🔍 Simulating liquidation...", "LIQUIDATION");
-            const canExecute = await this.executor.simulateLiquidation(
-                pos.user,
-                pos.debtToken,
-                pos.collateralToken,
-                debtToCover,
-                pos.poolFee
-            );
-
-            if (!canExecute) {
-                log(`   ❌ Simulation failed with poolFee ${pos.poolFee}`, "WARN");
-                
-                // Try alternative pool fees
-                for (const altFee of [100, 500, 3000, 10000]) {
-                    if (altFee === pos.poolFee) continue;
-                    
-                    const canExecute2 = await this.executor.simulateLiquidation(
-                        pos.user,
-                        pos.debtToken,
-                        pos.collateralToken,
-                        debtToCover,
-                        altFee
-                    );
-
-                    if (canExecute2) {
-                        log(`   ✅ Simulation passed with poolFee ${altFee}!`, "LIQUIDATION");
-                        await this.doExecute(pos, debtToCover, altFee, debtUSD);
-                        return;
-                    }
-                }
-                
-                log("   ❌ All simulations failed. Skipping.", "ERROR");
-                return;
-            }
-
-            log("   ✅ Simulation passed!", "LIQUIDATION");
+            // Skip simulation for speed — execute directly
             await this.doExecute(pos, debtToCover, pos.poolFee, debtUSD);
 
         } catch (error: any) {
@@ -440,7 +499,7 @@ class PositionMonitor {
     }
     
     private async doExecute(
-        pos: typeof WATCHED_POSITIONS[0],
+        pos: WatchedPosition,
         debtToCover: ethers.BigNumber,
         poolFee: number,
         debtUSD: number
