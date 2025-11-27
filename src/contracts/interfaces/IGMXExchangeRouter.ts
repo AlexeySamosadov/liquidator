@@ -2,7 +2,6 @@
  * TypeScript interface for GMX V2 ExchangeRouter contract
  */
 
-import { Contract } from 'ethers';
 import { Address } from '../../types';
 
 // Order type enum
@@ -62,7 +61,7 @@ export interface SimulateOracleParams {
 /**
  * Interface for GMX V2 ExchangeRouter contract methods
  */
-export interface IGMXExchangeRouter extends Contract {
+export interface IGMXExchangeRouter {
   // Order creation and management
   createOrder(params: CreateOrderParams): Promise<any>;
 

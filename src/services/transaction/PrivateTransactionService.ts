@@ -3,7 +3,7 @@
  * Sends transactions via bloXroute for MEV protection
  */
 
-import { JsonRpcProvider, Wallet, TransactionRequest, TransactionResponse } from 'ethers';
+import { JsonRpcProvider, WebSocketProvider, Wallet, TransactionRequest, TransactionResponse } from 'ethers';
 import { logger } from '../../utils/logger';
 
 export interface BloXrouteConfig {
@@ -26,12 +26,12 @@ export interface PrivateTransactionResult {
 export class PrivateTransactionService {
   private readonly config: BloXrouteConfig;
   private readonly wallet: Wallet;
-  private readonly publicProvider: JsonRpcProvider;
+  private readonly publicProvider: JsonRpcProvider | WebSocketProvider;
   private privateProvider?: JsonRpcProvider;
 
   constructor(
     wallet: Wallet,
-    publicProvider: JsonRpcProvider,
+    publicProvider: JsonRpcProvider | WebSocketProvider,
     config: BloXrouteConfig
   ) {
     this.wallet = wallet;
@@ -89,7 +89,7 @@ export class PrivateTransactionService {
         }),
       });
 
-      const data = await response.json();
+      const data = await response.json() as any;
 
       if (data.error) {
         logger.error('bloXroute transaction failed', {

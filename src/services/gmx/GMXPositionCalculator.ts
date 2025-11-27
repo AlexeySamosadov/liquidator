@@ -7,7 +7,7 @@ import { GMXContracts } from '../../contracts/GMXContracts';
 import { GMXPositionInfo, GMXLiquidatablePosition, Address } from '../../types';
 import { PositionInfo, Market, MarketPrices } from '../../contracts/interfaces/IGMXReader';
 import { logger } from '../../utils/logger';
-import { solidityPackedKeccak256 } from 'ethers';
+// import { solidityPackedKeccak256 } from 'ethers';
 
 const PRECISION = 10n ** 30n;
 const BASIS_POINTS = 10000n;
@@ -16,7 +16,7 @@ const BASIS_POINTS = 10000n;
  * GMXPositionCalculator handles all calculations for GMX positions
  */
 export class GMXPositionCalculator {
-  constructor(private readonly gmxContracts: GMXContracts) {}
+  constructor(private readonly gmxContracts: GMXContracts) { }
 
   /**
    * Calculate health factor for a position
@@ -268,9 +268,12 @@ export class GMXPositionCalculator {
     collateralToken: Address,
     isLong: boolean
   ): string {
-    return solidityPackedKeccak256(
-      ['address', 'address', 'address', 'bool'],
-      [account, market, collateralToken, isLong]
+    const { keccak256, AbiCoder } = require('ethers');
+    return keccak256(
+      AbiCoder.defaultAbiCoder().encode(
+        ['address', 'address', 'address', 'bool'],
+        [account, market, collateralToken, isLong]
+      )
     );
   }
 

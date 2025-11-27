@@ -208,7 +208,7 @@ export class GMXLiquidationExecutor {
     };
 
     // Populate transaction
-    const tx = await exchangeRouter.createOrder.populateTransaction(createOrderParams);
+    const tx = await (exchangeRouter as any).createOrder.populateTransaction(createOrderParams);
 
     return {
       ...tx,

@@ -5,11 +5,19 @@ import { LogLevel } from '../types';
 const envLogLevel = (process.env.LOG_LEVEL || 'info').toLowerCase() as LogLevel;
 const logToFile = (process.env.LOG_TO_FILE || 'true').toLowerCase() === 'true';
 
+// BigInt serialization helper
+const bigIntReplacer = (_key: string, value: any) => {
+  if (typeof value === 'bigint') {
+    return value.toString() + 'n';
+  }
+  return value;
+};
+
 const consoleFormat = winston.format.combine(
   winston.format.colorize(),
   winston.format.timestamp({ format: 'YYYY-MM-DD HH:mm:ss' }),
   winston.format.printf(({ timestamp, level, message, ...meta }) => {
-    const metaString = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : '';
+    const metaString = Object.keys(meta).length ? ` ${JSON.stringify(meta, bigIntReplacer)}` : '';
     return `[${timestamp}] ${level}: ${message}${metaString}`;
   }),
 );

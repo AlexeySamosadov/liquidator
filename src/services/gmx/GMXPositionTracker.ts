@@ -6,9 +6,9 @@
 import { GMXContracts } from '../../contracts/GMXContracts';
 import { GMXPositionCalculator } from './GMXPositionCalculator';
 import { Address, GMXPositionInfo, GMXLiquidatablePosition, LowercaseAddress } from '../../types';
-import { Market, MarketPrices } from '../../contracts/interfaces/IGMXReader';
+import { Market, MarketPrices, PositionStruct } from '../../contracts/interfaces/IGMXReader';
 import { logger } from '../../utils/logger';
-import { solidityPackedKeccak256 } from 'ethers';
+import { solidityPackedKeccak256, ethers } from 'ethers';
 
 /**
  * GMXPositionTracker manages all tracked positions
@@ -120,6 +120,40 @@ export class GMXPositionTracker {
     } catch (error) {
       logger.error('Failed to update position', { account, market: market.marketToken, error });
       return null;
+    }
+  }
+
+  /**
+   * Fetch positions directly from the blockchain for an account
+   * This provides the ground truth for position data
+   */
+  async fetchAccountPositionsOnChain(account: Address): Promise<PositionStruct[]> {
+    try {
+      const reader = this.gmxContracts.getReader();
+      const dataStore = this.gmxContracts.getDataStoreAddress();
+
+      // Checksum the account address
+      const checksumAccount = ethers.getAddress(account);
+
+      logger.debug('Fetching on-chain positions', { account: checksumAccount, dataStore });
+
+      // Call getAccountPositions with start=0, end=100 (max positions per account)
+      const positions = await reader.getAccountPositions(
+        dataStore,
+        checksumAccount,
+        0n,
+        100n
+      );
+
+      logger.debug('Fetched on-chain positions', {
+        account: checksumAccount,
+        count: positions.length
+      });
+
+      return positions;
+    } catch (error) {
+      logger.error('Failed to fetch on-chain positions', { account, error });
+      return [];
     }
   }
 

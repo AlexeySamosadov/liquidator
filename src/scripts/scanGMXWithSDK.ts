@@ -25,7 +25,7 @@ export async function fetchPositionsWithSDK(): Promise<SDKPosition[]> {
   logger.info('='.repeat(80));
 
   // const rpcUrl = process.env.RPC_URL || 'https://arb1.arbitrum.io/rpc';
-  const allPositions: SDKPosition[] = [];
+
 
   try {
     // Import GMX SDK dynamically
@@ -38,60 +38,99 @@ export async function fetchPositionsWithSDK(): Promise<SDKPosition[]> {
     logger.info('\nAttempting to fetch positions from Subsquid GraphQL...');
 
     try {
-      const query = `
-        query GetAllPositions {
-          positions(
-            where: { sizeInUsd_gt: "0" }
-            orderBy: sizeInUsd_DESC
-            limit: 1000
-          ) {
-            id
-            account
-            market
-            collateralToken
-            isLong
-            sizeInUsd
-            sizeInTokens
-            collateralAmount
+      // Fetch ALL positions using pagination, not just top 1000 by size
+      logger.info('Fetching ALL positions (including small ones) with pagination...');
+
+      let rawPositionsFromGraphQL: any[] = []; // Temporary array to hold raw data from GraphQL
+      let offset = 0;
+      const batchSize = 1000;
+      let hasMore = true;
+
+      while (hasMore) {
+        const query = `
+          query GetAllPositions($offset: Int!, $limit: Int!) {
+            positions(
+              where: { 
+                sizeInUsd_gt: "0"
+                sizeInTokens_gt: "0"
+              }
+              offset: $offset
+              limit: $limit
+            ) {
+              id
+              account
+              market
+              collateralToken
+              isLong
+              sizeInUsd
+              sizeInTokens
+              collateralAmount
+            }
           }
+        `;
+        const response = await fetch('https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            query,
+            variables: { offset, limit: batchSize },
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
         }
-      `;
 
-      const response = await fetch('https://gmx.squids.live/gmx-synthetics-arbitrum:prod/api/graphql', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ query }),
-      });
+        const result: any = await response.json();
+        const data = result.data;
 
-      const data: any = await response.json();
+        if (data && data.positions && data.positions.length > 0) {
+          rawPositionsFromGraphQL.push(...data.positions);
+          logger.info(`Batch ${Math.floor(offset / batchSize) + 1}: fetched ${data.positions.length} positions (total: ${rawPositionsFromGraphQL.length})`);
 
-      if (data.errors) {
-        logger.warn('GraphQL query failed:', data.errors);
-      } else if (data.data && data.data.positions) {
-        const positions = data.data.positions;
-        logger.info(`✅ Found ${positions.length} open positions from GraphQL!`);
-
-        // Map to exported interface
-        for (const pos of positions) {
-          allPositions.push({
-            account: pos.account,
-            market: pos.market,
-            collateralToken: pos.collateralToken,
-            isLong: pos.isLong,
-            sizeInUsd: pos.sizeInUsd,
-            sizeInTokens: pos.sizeInTokens,
-            collateralAmount: pos.collateralAmount
-          });
+          if (data.positions.length < batchSize) {
+            hasMore = false;
+          } else {
+            offset += batchSize;
+          }
+        } else {
+          hasMore = false;
         }
       }
+
+      logger.info(`Fetched ${rawPositionsFromGraphQL.length} raw positions from GraphQL.`);
+
+      // Convert to SDKPosition format
+      const sdkPositions: SDKPosition[] = rawPositionsFromGraphQL.map((pos: any) => ({
+        account: pos.account,
+        market: pos.market,
+        collateralToken: pos.collateralToken,
+        isLong: pos.isLong,
+        sizeInUsd: pos.sizeInUsd,
+        sizeInTokens: pos.sizeInTokens,
+        collateralAmount: pos.collateralAmount,
+      }));
+
+      // Log size distribution
+      const sizes = sdkPositions.map(p => Number(p.sizeInUsd));
+      const smallPositions = sizes.filter(s => s < 1000); // < $1k
+      const mediumPositions = sizes.filter(s => s >= 1000 && s < 100000); // $1k-$100k
+      const largePositions = sizes.filter(s => s >= 100000); // > $100k
+
+      logger.info('📊 Position size distribution:', {
+        total: sdkPositions.length,
+        small: smallPositions.length,
+        medium: mediumPositions.length,
+        large: largePositions.length
+      });
+
+      return sdkPositions;
     } catch (graphqlError: any) {
       logger.error('GraphQL fetch failed:', graphqlError.message);
+      return [];
     }
-
-    return allPositions;
-
   } catch (error: any) {
     logger.error('\n❌ Scan failed:', {
       error: error.message,
@@ -105,7 +144,7 @@ export async function fetchPositionsWithSDK(): Promise<SDKPosition[]> {
 if (require.main === module) {
   fetchPositionsWithSDK()
     .then((positions) => {
-      logger.info(`Scanner finished. Found ${positions.length} positions.`);
+      logger.info(`Scanner finished.Found ${positions.length} positions.`);
 
       // Log analysis for direct run
       const liquidatablePositions = [];
@@ -123,7 +162,7 @@ if (require.main === module) {
         }
       }
 
-      logger.info(`🎯 Potentially liquidatable (based on raw data): ${liquidatablePositions.length}`);
+      logger.info(`🎯 Potentially liquidatable(based on raw data): ${liquidatablePositions.length} `);
       process.exit(0);
     })
     .catch((error) => {

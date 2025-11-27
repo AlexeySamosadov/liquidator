@@ -9,7 +9,7 @@ export const GMX_ARBITRUM_ADDRESSES = {
   marketFactory: '0xf5F30B10141E1F63FC11eD772931A8294a591996',
   exchangeRouter: '0x7c68c7866a64fa2160f78eeae12217ffbf871fa8',
   depositVault: '0xF89e77e8Dc11691C9e8757e84aaFbCD8A67d7A55',
-  reader: '0x60a0fF4cDaF0f6D496d35a5B7E7f4e81e7bF4D23',  // GMX Reader for position queries
+  reader: '0x65A6CC451BAfF7e7B4FDAb4157763aB4b6b44D0E',  // GMX V2 SyntheticsReader
   dataStore: '0xFD70de6b91282D8017aA4E741e9Ae325CAb992d8',  // DataStore for market data
 };
 

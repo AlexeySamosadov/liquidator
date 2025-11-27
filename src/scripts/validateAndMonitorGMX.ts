@@ -29,7 +29,8 @@ async function validatePositions() {
     const provider = new ethers.JsonRpcProvider(rpcUrl);
     const contracts = new GMXContracts(provider, GMX_ARBITRUM_ADDRESSES);
     const reader = contracts.getReader();
-    const dataStoreAddress = contracts.getDataStoreAddress();
+    const dataStoreAddress = ethers.getAddress(contracts.getDataStoreAddress());
+    logger.info(`Using DataStore: ${dataStoreAddress}`);
 
     // 3. Group by account to minimize RPC calls
     const uniqueAccounts = new Set(sdkPositions.map(p => p.account));
@@ -44,9 +45,17 @@ async function validatePositions() {
         try {
             // Get all positions for this account from Reader
             // We assume max 100 positions per account
+            const checksumAddress = ethers.getAddress(account);
+
+            if (processed === 0) {
+                logger.info(`Debug: Reader Target: ${reader.target}`);
+                logger.info(`Debug: DataStore: ${dataStoreAddress}`);
+                logger.info(`Debug: Account: ${checksumAddress}`);
+            }
+
             const onChainPositions = await reader.getAccountPositions(
                 dataStoreAddress,
-                account,
+                checksumAddress,
                 0n,
                 100n
             );
@@ -108,6 +117,7 @@ async function validatePositions() {
     }
 
     logger.info('Validation Complete');
+    logger.info(`Verified ${verifiedPositions.length} positions on-chain`);
     logger.info(`Found ${discrepancies.length} collateral discrepancies`);
     if (discrepancies.length > 0) {
         logger.info('Sample discrepancies:', discrepancies.slice(0, 5));
